@@ -1,6 +1,8 @@
 package pages;
 
 import java.util.List;
+import java.util.Random;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -16,27 +18,32 @@ import java.time.format.DateTimeParseException;
 
 import practo.Base;
 
-
 public class DoctorsPage extends Base {
     
-    private String name1;
-    private String name2;
-    private String date2;
+    private String selected_name;
+    private String selected_doctor;
+    private String date;
     private String ts2;
-    private String selectedDate; 
+    private String SelectedDate;
+    LocalDate selectedDate;
 
-   
+    public static int generateRandomIntegerInRange(int min, int max) {
+        Random random = new Random();
+        return random.nextInt(max - min) + min; 
+    }
+    int random_int = generateRandomIntegerInRange(0, 10);
+
     public void book_clinic_visit() throws InterruptedException {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20)); 
         List<WebElement> clinicVisitButtons = getClinicVisitButtons();
-        if (clinicVisitButtons.size() > 2) {
-            clickClinicVisitButton(wait, clinicVisitButtons.get(2));
+        if (clinicVisitButtons.size() > random_int) {
+            clickClinicVisitButton(wait, clinicVisitButtons.get(random_int));
         } else {
             System.out.println("The expected number of buttons was not found.");
             return; 
         }
         captureDoctorName();
-        selectedDate = selectAvailableSlot(); // Store selected date
+        SelectedDate = selectAvailableSlot();
         clickTimeSlot();
     }
 
@@ -50,12 +57,12 @@ public class DoctorsPage extends Base {
 
     private void captureDoctorName() {
         List<WebElement> name = driver.findElements(By.xpath("//button[contains(text(), 'Book Clinic Visit')]/preceding::h2"));
-        name1 = name.get(2).getText();
+        selected_name = name.get(random_int).getText();
     }
 
     private String selectAvailableSlot() throws InterruptedException {
         List<WebElement> list = driver.findElements(By.xpath("//div[@class='u-pos-rel c-slots-header__daybar ']/div"));
-        String selectedDate = ""; // Store the selected date
+        String selectedDate = ""; 
 
         for (int i = 0; i < list.size(); i++) {
             String text = driver.findElement(By.xpath("//div[@class='u-pos-rel c-slots-header__daybar ']/div[" + (i + 1) + "]/div[2]")).getText();
@@ -72,101 +79,108 @@ public class DoctorsPage extends Base {
     private void clickTimeSlot() {
         ts2 = driver.findElement(By.xpath("//span[contains(.,'PM')]")).getText();
         driver.findElement(By.xpath("//span[contains(., 'PM')]")).click();
-        System.out.println("Slot clicked");
     }
 
-    public void getname() {
-        System.out.println(name1);
-        name2 = driver.findElement(By.xpath("//div[contains(@data-qa-id, 'doctor_name')]")).getText();
-        System.out.println(name2);
-        validateName();
+    public Boolean getname() {
+        selected_doctor = driver.findElement(By.xpath("//div[contains(@data-qa-id, 'doctor_name')]")).getText();
+        System.out.println("Selected doctor name: " + selected_doctor);
+        return validateName();
     }
 
-    private void validateName() {
-        test = report.createTest("Test 2 - validateName");
-        if (name1.equalsIgnoreCase(name2)) {
-            test.log(Status.PASS, "Name is same");
-            System.out.println("Name is same");
-        } else {
-            test.log(Status.FAIL, "Not same");
-            System.out.println("Not same");
-        }
-    }
-
-    public void gettime() {
+    public Boolean gettime() {
         String ts1 = driver.findElement(By.xpath("//span[contains(., 'PM')]")).getText();
         System.out.println(ts1);
-        validateTimeSlot(ts1);
+        return validateTimeSlot(ts1);
     }
 
-    private void validateTimeSlot(String ts1) {
-        // Normalize the time strings
-        String normalizedTs1 = normalizeTime(ts1);
-        String normalizedTs2 = normalizeTime(ts2);
+    public Boolean getdate() {
+        String date1 = driver.findElement(By.xpath("//span[contains(., '2024')]")).getText();
+        System.out.println("Booked Date: " + date1);
+        return validateDate(date1); 
+    }
 
-        test = report.createTest("Test 2 - validateTimeSlot");
-        if (normalizedTs1.equals(normalizedTs2)) {
-            test.log(Status.PASS, "The time slots are the same");
-            System.out.println("The time slots are the same: " + normalizedTs1);
+    private Boolean validateName() {
+        Boolean validateName = false;
+        test = report.createTest("Test 2 - validateName");
+        if (selected_name.equalsIgnoreCase(selected_doctor)) {
+            validateName = true;
+            test.log(Status.PASS, "Name is same");
         } else {
-            test.log(Status.FAIL, "The time slots are different");
-
-            System.out.println("The time slots are different: " + normalizedTs1 + " vs " + normalizedTs2);
+            validateName = false;
+            test.log(Status.FAIL, "Name is Not same");
         }
+        return validateName;
     }
+
     private String normalizeTime(String time) {
-        // Remove leading zero if present
         if (time.startsWith("0")) {
             time = time.substring(1);
         }
         return time;
     }
 
-    public void getdate() {
-        String date1 = driver.findElement(By.xpath("//span[contains(., '2024')]")).getText();
-        System.out.println("Booked Date: " + date1);
-        validateDate(date1); // Validate the booked date
+    private Boolean validateTimeSlot(String ts1) {
+        String normalizedTs1 = normalizeTime(ts1);
+        String normalizedTs2 = normalizeTime(ts2);
+        Boolean validateTimeSlot = false;
+        test = report.createTest("Test 2 - validateTimeSlot");
+        if (normalizedTs1.equals(normalizedTs2)) {
+            validateTimeSlot = true;
+            test.log(Status.PASS, "The time slots are the same");
+            System.out.println(normalizedTs1);
+        } else {
+            validateTimeSlot = false;
+            test.log(Status.FAIL, "The time slots are different");
+            System.out.println(normalizedTs1 + " vs " + normalizedTs2);
+        }
+        return validateTimeSlot;
     }
 
-
-    private void validateDate(String bookedDate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
-
-        // Get today's and tomorrow's dates
+    private Boolean validateDate(String bookedDate) {
+        Boolean validateDate = false;
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(1);
-        LocalDate selectedDate;
 
-        // Determine the selected date based on input
-        if (this.selectedDate.equalsIgnoreCase("Today")) {
-            selectedDate = today; // Use today's date
-        } else if (this.selectedDate.equalsIgnoreCase("Tomorrow")) {
-            selectedDate = tomorrow; // Use tomorrow's date
+        if (SelectedDate.contains("Today")) {
+            selectedDate = today;
+        } else if (SelectedDate.contains("Tomorrow")) {
+            selectedDate = tomorrow;
         } else {
             try {
-                selectedDate = LocalDate.parse(this.selectedDate, formatter);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+                selectedDate = LocalDate.parse(SelectedDate, formatter);
             } catch (DateTimeParseException e) {
-                System.out.println("Invalid date format: " + bookedDate);
-                return;
+                System.out.println("Invalid date format: " + SelectedDate);
+                return false;
             }
         }
 
-        // Compare the selected date with the booked date
-        LocalDate bookedLocalDate;
-        try {
-            bookedLocalDate = LocalDate.parse(bookedDate, formatter);
-        } catch (DateTimeParseException e) {
-            System.out.println("Invalid booked date format: " + bookedDate);
-            return;
-        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+        String formattedSelectedDate = selectedDate.format(formatter);
 
-        if (selectedDate.equals(bookedLocalDate)) {
-            System.out.println("The selected date and booked date are the same: " + selectedDate);
+        String trimmedSelectedDate = trimMonth(formattedSelectedDate);
+
+        String trimmedBookedDate = bookedDate.trim();
+
+        System.out.println("Selected Date: " + trimmedSelectedDate);
+        System.out.println("Booked Date: " + trimmedBookedDate);
+
+        test = report.createTest("Test 2 - validateDate");
+        if (trimmedSelectedDate.equals(trimmedBookedDate)) {
+            validateDate = true;
+            test.log(Status.PASS, "The selected date and booked date are the same");
+            System.out.println("Dates match: " + trimmedBookedDate);
         } else {
-            System.out.println("The selected date and booked date are different: " + selectedDate + " vs " + bookedLocalDate);
+            validateDate = false;
+            test.log(Status.FAIL, "The selected date and booked date are different");
+            System.out.println("Dates do not match: " + trimmedBookedDate + " vs " + trimmedSelectedDate);
         }
+        return validateDate;
     }
 
+    public static String trimMonth(String date) {
+        return date.substring(0, 3) + date.substring(4); 
+    }
 
     public void setDriver(WebDriver driver) {
         this.driver = driver;
