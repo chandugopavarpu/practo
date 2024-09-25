@@ -1,5 +1,4 @@
 package pages;
-
 import java.util.List;
 
 import org.openqa.selenium.By;
@@ -12,17 +11,15 @@ import com.aventstack.extentreports.Status;
 import practo.Base;
 
 public class HomePage extends Base {
-	 
-    
     By city = By.xpath("//*[@id='c-omni-container']/div/div[1]/div/input");
     By speciality = By.xpath("//*[@id='c-omni-container']/div/div[2]/div/input");
     By clear = By.xpath("//*[@id='c-omni-container']/div/div[1]/div[1]/span[2]/span/i");
   
     public void enter_city() throws InterruptedException {
         driver.findElement(city).click();
-        driver.findElement(clear).click(); // Clear any previous inputs
+        driver.findElement(clear).click(); 
         Thread.sleep(1000);
-        driver.findElement(city).sendKeys("Hyderabad");
+        driver.findElement(city).sendKeys(properties.getProperty("city"));
         Thread.sleep(3000);
         driver.findElement(city).sendKeys(Keys.ARROW_DOWN);
         Thread.sleep(1000);
@@ -32,7 +29,7 @@ public class HomePage extends Base {
     }
 
     public void speciality() throws InterruptedException {
-        driver.findElement(speciality).sendKeys("Dentist");
+        driver.findElement(speciality).sendKeys(properties.getProperty("speciality"));
         Thread.sleep(3000);
         driver.findElement(speciality).sendKeys(Keys.ARROW_DOWN);
         Thread.sleep(1000);
