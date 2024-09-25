@@ -17,24 +17,22 @@ import com.aventstack.extentreports.reporter.configuration.Theme;
 
 public class Base {
     protected WebDriver driver;
-    private Properties properties;
+    protected Properties properties;
     public static ExtentSparkReporter htmlreport;
     public static ExtentReports report;
     public ExtentTest test;
-    SoftAssert sa=new SoftAssert();
+    SoftAssert sa = new SoftAssert();
     
     public static void report() {
         htmlreport = new ExtentSparkReporter("C:\\Users\\ChandanaG\\Pictures\\practo1.html");
         htmlreport.config().setReportName("Report on Practo");
         htmlreport.config().setDocumentTitle("Practo Automation Tests");
         htmlreport.config().setTheme(Theme.DARK);
-
         report = new ExtentReports();
         report.setSystemInfo("Environment", "TestEnv");
         report.setSystemInfo("TesterName", "Chandana");
         report.attachReporter(htmlreport);
     }
-    
     
     public Base() {
         try {
@@ -45,23 +43,17 @@ public class Base {
             e.printStackTrace();
         }
     }
-    
-
-    // Setup method for initializing the WebDriver based on the browser property
-    public void setUp() {
-        String browser = getProperty("browser");  // Use the current instance's getProperty method
-        if (browser.equalsIgnoreCase("chrome")) {
-            driver = new ChromeDriver();
-        } else if (browser.equalsIgnoreCase("edge")) {
+   
+    public void setUp(String browser) {
+        if (browser.equalsIgnoreCase("edge")) {
             driver = new EdgeDriver();
+        } else if (browser.equalsIgnoreCase("chrome")) {
+            driver = new ChromeDriver();
         }
-
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(getTimeout()));
-       
     }
     
-
     public String getProperty(String key) {
         return properties.getProperty(key);
     }
@@ -74,11 +66,10 @@ public class Base {
         driver.get(getProperty("url"));
     }
 
-    
-    public static void flush()
-    {
-    	report.flush();
+    public static void flush() {
+        report.flush();
     }
+
     public void closeUrl() {
         if (driver != null) {
             driver.close();
