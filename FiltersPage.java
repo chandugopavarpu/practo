@@ -33,13 +33,11 @@ public class FiltersPage extends Base {
             try {
                 feeValue = Integer.parseInt(feeText);
             } catch (NumberFormatException e) {
-                System.out.println("Invalid fee value: " + feeText);
                 allFeesValid = false;
                 continue; 
             }
 
             if (feeValue < 500 || feeValue > 1000) {
-               // System.out.println("Fee out of range: " + feeValue);
                 allFeesValid = false;
             }
         }
